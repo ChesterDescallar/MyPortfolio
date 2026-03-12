@@ -56,7 +56,7 @@ function SectionTitle({
   return (
     <h2
       className={`text-lg font-semibold mb-4 ${
-        isOptimized ? "font-mono text-slate-200 tracking-tight" : "font-bold text-gray-800 font-serif"
+        isOptimized ? "font-mono text-slate-200 tracking-tight" : "font-bold text-gray-800 font-playfair"
       }`}
     >
       {children}
@@ -95,7 +95,7 @@ export default function Home() {
   // ─── Themes ──────────────────────────────────────────────────────────────────
   const page = isOptimized
     ? "min-h-screen bg-slate-950 text-slate-100 transition-all duration-500 pb-16"
-    : "min-h-screen bg-white text-gray-900 font-serif transition-all duration-500 pb-16";
+    : "min-h-screen bg-white text-gray-900 font-playfair transition-all duration-500 pb-16";
 
   const cardCls = isOptimized
     ? "bg-white/5 border border-white/10 backdrop-blur-sm rounded-xl"
@@ -120,7 +120,7 @@ export default function Home() {
             className={`text-xl ${
               isOptimized
                 ? "font-mono tracking-tighter text-white"
-                : "font-bold italic font-serif text-gray-800"
+                : "font-bold italic font-playfair text-gray-800"
             }`}
           >
             Chester Descallar
@@ -191,7 +191,7 @@ export default function Home() {
 
               <h2
                 className={`text-3xl font-bold leading-tight ${
-                  isOptimized ? "font-mono text-white" : "font-serif text-gray-900"
+                  isOptimized ? "font-mono text-white" : "font-playfair text-gray-900"
                 }`}
               >
                 {isOptimized ? (

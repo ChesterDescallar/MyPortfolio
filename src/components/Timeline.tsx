@@ -10,12 +10,25 @@ interface TimelineProps {
 }
 
 
+let xrangeInitialised = false;
+
 export default function Timeline({ isOptimized }: TimelineProps) {
   const [Highcharts, setHighcharts] = useState<typeof import("highcharts") | null>(null);
 
   useEffect(() => {
-    import("highcharts").then((hc) => {
-      setHighcharts(hc.default);
+    import("highcharts").then(async (hc) => {
+      const HC = hc.default;
+      // On webpack (Vercel prod) xrange must be explicitly initialised.
+      // On Turbopack (dev) the module resolves to the HC object itself — skip.
+      if (!xrangeInitialised) {
+        xrangeInitialised = true;
+        if (!HC.seriesTypes?.xrange) {
+          const mod = await import("highcharts/modules/xrange");
+          const fn = typeof mod.default === "function" ? mod.default : typeof mod === "function" ? mod : null;
+          if (fn) fn(HC);
+        }
+      }
+      setHighcharts(HC);
     });
   }, []);
 
@@ -25,7 +38,7 @@ export default function Timeline({ isOptimized }: TimelineProps) {
     chart: {
       type: "xrange",
       backgroundColor: "transparent",
-      style: { fontFamily: isOptimized ? "var(--font-geist-mono)" : "Times New Roman, serif" },
+      style: { fontFamily: isOptimized ? "var(--font-geist-mono)" : "var(--font-playfair)" },
     },
     title: { text: undefined },
     xAxis: {

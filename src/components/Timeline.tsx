@@ -1,115 +1,137 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-
-const HighchartsReact = dynamic(() => import("highcharts-react-official"), { ssr: false });
+import { motion } from "framer-motion";
+import { Calendar } from "lucide-react";
 
 interface TimelineProps {
   isOptimized: boolean;
 }
 
-
-let xrangeInitialised = false;
+const entries = [
+  {
+    role: "Software Engineer",
+    company: "Veson Nautical",
+    location: "Remote, UK",
+    period: "Dec 2022 – Present",
+    current: true,
+    description:
+      "Building scalable SaaS platforms for the maritime industry. Led frontend migration to Next.js/React with AI tooling, boosted Lighthouse score from 33% to 85%, and improved load performance by 40% via Vue 2 → Vue 3 migration.",
+    dotColor: "bg-sky-400",
+    badgeOptimized: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+    badgeLegacy: "bg-blue-100 text-blue-700 border-blue-200",
+    cardOptimized: "bg-sky-500/5 border-sky-500/20",
+    cardLegacy: "bg-blue-50 border-blue-200",
+  },
+  {
+    role: "Junior Developer",
+    company: "VesselsValue",
+    location: "Remote, UK",
+    period: "Sep 2021 – Nov 2022",
+    current: false,
+    description:
+      "Built reusable Vue.js and Tailwind CSS components for a global maritime analytics platform. Developed backend RESTful APIs and GraphQL integrations using PHP and Laravel.",
+    dotColor: "bg-violet-400",
+    badgeOptimized: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+    badgeLegacy: "bg-violet-100 text-violet-700 border-violet-200",
+    cardOptimized: "bg-violet-500/5 border-violet-500/20",
+    cardLegacy: "bg-violet-50 border-violet-200",
+  },
+  {
+    role: "BSc Software Engineering",
+    company: "Swansea University",
+    location: "Swansea, UK",
+    period: "Sep 2018 – Jul 2021",
+    current: false,
+    description:
+      "1st Class Honours. Third year project (85%): discount navigation mobile app in Android Studio using Java, Google APIs, Firebase, and Geofencing. Excellence Scholarship recipient & Student Ambassador.",
+    dotColor: "bg-amber-400",
+    badgeOptimized: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    badgeLegacy: "bg-amber-100 text-amber-700 border-amber-200",
+    cardOptimized: "bg-amber-500/5 border-amber-500/20",
+    cardLegacy: "bg-amber-50 border-amber-200",
+  },
+];
 
 export default function Timeline({ isOptimized }: TimelineProps) {
-  const [Highcharts, setHighcharts] = useState<typeof import("highcharts") | null>(null);
-
-  useEffect(() => {
-    import("highcharts").then(async (hc) => {
-      const HC = hc.default;
-      // On webpack (Vercel prod) xrange must be explicitly initialised.
-      // On Turbopack (dev) the module resolves to the HC object itself — skip.
-      if (!xrangeInitialised) {
-        xrangeInitialised = true;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (!(HC as any).seriesTypes?.xrange) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const mod: any = await import("highcharts/modules/xrange");
-          const fn = typeof mod.default === "function" ? mod.default : typeof mod === "function" ? mod : null;
-          if (fn) fn(HC);
-        }
-      }
-      setHighcharts(HC);
-    });
-  }, []);
-
-  if (!Highcharts) return null;
-
-  const options: Highcharts.Options = {
-    chart: {
-      type: "xrange",
-      backgroundColor: "transparent",
-      style: { fontFamily: isOptimized ? "var(--font-geist-mono)" : "var(--font-playfair)" },
-    },
-    title: { text: undefined },
-    xAxis: {
-      type: "datetime",
-      min: Date.UTC(2018, 0, 1),
-      max: Date.UTC(2026, 0, 1),
-      labels: {
-        style: { color: isOptimized ? "#94a3b8" : "#444" },
-        format: "{value:%Y}",
-      },
-      lineColor: isOptimized ? "#334155" : "#ccc",
-      tickColor: isOptimized ? "#334155" : "#ccc",
-    },
-    yAxis: {
-      title: { text: undefined },
-      labels: { enabled: false },
-      gridLineColor: isOptimized ? "#1e293b" : "#e5e7eb",
-    },
-    tooltip: {
-      backgroundColor: isOptimized ? "#0f172a" : "#fff",
-      borderColor: isOptimized ? "#38bdf8" : "#3b82f6",
-      style: { color: isOptimized ? "#e2e8f0" : "#111" },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      formatter: function (this: any) {
-        return `<b>${this.point.name}</b><br/>${(this.point as { custom?: { description: string } }).custom?.description ?? ""}`;
-      },
-    },
-    series: [
-      {
-        type: "xrange",
-        name: "Career",
-        pointWidth: 24,
-        borderRadius: isOptimized ? 6 : 0,
-        data: [
-          {
-            x: Date.UTC(2018, 8, 1),
-            x2: Date.UTC(2021, 6, 1),
-            y: 0,
-            name: "Swansea University",
-            custom: { description: "BSc Software Engineering, 1st Class Honours" },
-            color: isOptimized ? "#38bdf8" : "#3b82f6",
-          },
-          {
-            x: Date.UTC(2021, 7, 1),
-            x2: Date.UTC(2022, 7, 1),
-            y: 0,
-            name: "VesselsValue",
-            custom: { description: "Junior Developer — Vue.js, PHP, GraphQL" },
-            color: isOptimized ? "#818cf8" : "#6366f1",
-          },
-          {
-            x: Date.UTC(2022, 8, 1),
-            x2: Date.UTC(2026, 0, 1),
-            y: 0,
-            name: "Veson Nautical",
-            custom: { description: "Software Engineer — Laravel, React, AI Tooling" },
-            color: isOptimized ? "#34d399" : "#10b981",
-          },
-        ],
-      },
-    ],
-    legend: { enabled: false },
-    credits: { enabled: false },
-    exporting: { enabled: false },
-  };
-
   return (
-    <div className={`rounded-lg overflow-hidden ${isOptimized ? "border border-white/10" : "border border-gray-300"}`}>
-      <HighchartsReact highcharts={Highcharts} options={options} />
+    <div className="relative">
+      {/* Vertical spine */}
+      <div
+        className={`absolute left-[7px] top-2 bottom-2 w-px ${
+          isOptimized ? "bg-white/10" : "bg-gray-200"
+        }`}
+      />
+
+      <div className="space-y-4 pl-8">
+        {entries.map((entry, i) => (
+          <motion.div
+            key={entry.company}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.08, duration: 0.3 }}
+            className="relative"
+          >
+            {/* Dot on spine */}
+            <span
+              className={`absolute -left-8 top-5 size-[14px] rounded-full border-2 ${entry.dotColor} ${
+                isOptimized ? "border-slate-950" : "border-white"
+              }`}
+            />
+
+            <div
+              className={`rounded-xl border p-4 transition-all duration-300 ${
+                isOptimized ? entry.cardOptimized : entry.cardLegacy
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <h3
+                    className={`font-semibold text-base leading-tight ${
+                      isOptimized ? "text-white font-mono" : "text-gray-900 font-bold"
+                    }`}
+                  >
+                    {entry.role}
+                  </h3>
+                  <p
+                    className={`text-sm font-medium mt-0.5 ${
+                      isOptimized ? "text-slate-300" : "text-gray-700"
+                    }`}
+                  >
+                    {entry.company}
+                  </p>
+                  <p
+                    className={`text-xs mt-0.5 ${
+                      isOptimized ? "text-slate-500 font-mono" : "text-gray-400"
+                    }`}
+                  >
+                    {entry.location}
+                  </p>
+                </div>
+
+                <span
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border whitespace-nowrap ${
+                    isOptimized ? entry.badgeOptimized : entry.badgeLegacy
+                  } ${isOptimized ? "font-mono" : ""}`}
+                >
+                  <Calendar className="size-3" />
+                  {entry.period}
+                  {entry.current && isOptimized && (
+                    <span className="ml-1 size-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                  )}
+                </span>
+              </div>
+
+              <p
+                className={`mt-2.5 text-sm leading-relaxed ${
+                  isOptimized ? "text-slate-400" : "text-gray-600"
+                }`}
+              >
+                {entry.description}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

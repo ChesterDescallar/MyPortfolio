@@ -10,7 +10,8 @@
       "Bash(npx shadcn@latest add toast card badge dialog switch --yes)",
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest add sonner card badge dialog switch --yes)",
-      "Read(//c/Users/chest/AppData/Local/Temp/claude/c--Users-chest-Projects-MyPortfolio/46acddd1-d220-4a34-bdfe-9c6fdb93ff8e/tasks/**)"
+      "Read(//c/Users/chest/AppData/Local/Temp/claude/c--Users-chest-Projects-MyPortfolio/46acddd1-d220-4a34-bdfe-9c6fdb93ff8e/tasks/**)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

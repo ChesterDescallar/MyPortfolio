@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { SoundProvider } from "@/lib/sound";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,8 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${geistMono.variable} ${playfair.variable} antialiased font-inter`}>
-        {children}
-        <Toaster position="top-right" />
+        <SoundProvider>
+          {children}
+        </SoundProvider>
+        <Toaster position="top-right" richColors duration={1500} />
       </body>
     </html>
   );

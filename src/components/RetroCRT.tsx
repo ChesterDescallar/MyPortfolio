@@ -4,6 +4,209 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useSound } from "@/lib/sound";
+
+// ─── Snake Game ────────────────────────────────────────────────────────────────
+const COLS = 30;
+const ROWS = 20;
+const CELL = 16;
+
+type Dir = "UP" | "DOWN" | "LEFT" | "RIGHT";
+type Pt = { x: number; y: number };
+
+function randFood(snake: Pt[]): Pt {
+  let pt: Pt;
+  do {
+    pt = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+  } while (snake.some((s) => s.x === pt.x && s.y === pt.y));
+  return pt;
+}
+
+function SnakeGame({ onQuit, play }: { onQuit: () => void; play: (s: "xp" | "error" | "click") => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stateRef = useRef({
+    snake: [{ x: 15, y: 10 }, { x: 14, y: 10 }, { x: 13, y: 10 }] as Pt[],
+    dir: "RIGHT" as Dir,
+    nextDir: "RIGHT" as Dir,
+    food: { x: 20, y: 10 } as Pt,
+    score: 0,
+    dead: false,
+    started: false,
+  });
+  const [score, setScore] = useState(0);
+  const [dead, setDead] = useState(false);
+  const [started, setStarted] = useState(false);
+  const rafRef = useRef<number>(0);
+  const lastTickRef = useRef(0);
+  const SPEED = 120; // ms per tick
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const { snake, food, dead: isDead } = stateRef.current;
+
+    ctx.fillStyle = "#050d05";
+    ctx.fillRect(0, 0, COLS * CELL, ROWS * CELL);
+
+    // Grid dots
+    ctx.fillStyle = "rgba(0,255,80,0.06)";
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        ctx.fillRect(c * CELL + 7, r * CELL + 7, 2, 2);
+
+    // Food — pulsing green square
+    ctx.fillStyle = isDead ? "rgba(255,80,80,0.9)" : "rgba(255,200,0,0.9)";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = isDead ? "rgba(255,80,80,0.8)" : "rgba(255,200,0,0.8)";
+    ctx.fillRect(food.x * CELL + 2, food.y * CELL + 2, CELL - 4, CELL - 4);
+    ctx.shadowBlur = 0;
+
+    // Snake
+    snake.forEach((seg, i) => {
+      const isHead = i === 0;
+      ctx.fillStyle = isDead
+        ? `rgba(255,80,80,${isHead ? 1 : 0.6})`
+        : `rgba(0,255,80,${isHead ? 1 : 0.75 - i * 0.01})`;
+      ctx.shadowBlur = isHead ? 12 : 4;
+      ctx.shadowColor = isDead ? "rgba(255,80,80,0.9)" : "rgba(0,255,80,0.9)";
+      if (isHead) {
+        ctx.fillRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2);
+      } else {
+        ctx.fillRect(seg.x * CELL + 2, seg.y * CELL + 2, CELL - 4, CELL - 4);
+      }
+      ctx.shadowBlur = 0;
+    });
+  }, []);
+
+  const tick = useCallback((now: number) => {
+    if (now - lastTickRef.current < SPEED) {
+      rafRef.current = requestAnimationFrame(tick);
+      return;
+    }
+    lastTickRef.current = now;
+
+    const s = stateRef.current;
+    if (s.dead || !s.started) {
+      draw();
+      rafRef.current = requestAnimationFrame(tick);
+      return;
+    }
+
+    s.dir = s.nextDir;
+    const head = { ...s.snake[0] };
+    if (s.dir === "UP") head.y--;
+    else if (s.dir === "DOWN") head.y++;
+    else if (s.dir === "LEFT") head.x--;
+    else head.x++;
+
+    // Wall collision
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+      s.dead = true;
+      play("error");
+      setDead(true);
+      draw();
+      rafRef.current = requestAnimationFrame(tick);
+      return;
+    }
+
+    // Self collision
+    if (s.snake.some((seg) => seg.x === head.x && seg.y === head.y)) {
+      s.dead = true;
+      play("error");
+      setDead(true);
+      draw();
+      rafRef.current = requestAnimationFrame(tick);
+      return;
+    }
+
+    s.snake.unshift(head);
+
+    if (head.x === s.food.x && head.y === s.food.y) {
+      s.score++;
+      setScore(s.score);
+      play("xp");
+      s.food = randFood(s.snake);
+    } else {
+      s.snake.pop();
+    }
+
+    draw();
+    rafRef.current = requestAnimationFrame(tick);
+  }, [draw, play]);
+
+  useEffect(() => {
+    stateRef.current.food = randFood(stateRef.current.snake);
+    draw();
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [draw, tick]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const s = stateRef.current;
+      if (!s.started && ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d"].includes(e.key)) {
+        s.started = true;
+        setStarted(true);
+      }
+      if (e.key === "ArrowUp"    || e.key === "w") { if (s.dir !== "DOWN")  s.nextDir = "UP"; }
+      if (e.key === "ArrowDown"  || e.key === "s") { if (s.dir !== "UP")    s.nextDir = "DOWN"; }
+      if (e.key === "ArrowLeft"  || e.key === "a") { if (s.dir !== "RIGHT") s.nextDir = "LEFT"; }
+      if (e.key === "ArrowRight" || e.key === "d") { if (s.dir !== "LEFT")  s.nextDir = "RIGHT"; }
+      if (e.key === "Escape") onQuit();
+      if (s.dead && e.key === "r") {
+        stateRef.current = {
+          snake: [{ x: 15, y: 10 }, { x: 14, y: 10 }, { x: 13, y: 10 }],
+          dir: "RIGHT", nextDir: "RIGHT",
+          food: randFood([{ x: 15, y: 10 }]),
+          score: 0, dead: false, started: false,
+        };
+        setScore(0); setDead(false); setStarted(false);
+      }
+      if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onQuit]);
+
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 gap-3 py-4 select-none">
+      <div className="flex items-center gap-6 font-mono text-xs" style={{ color: "rgba(0,255,80,0.7)" }}>
+        <span>SNAKE v1.0</span>
+        <span style={{ color: "rgba(0,255,80,0.9)" }}>SCORE: {score}</span>
+        <span className="opacity-50">[ESC] quit</span>
+      </div>
+      <div className="relative" style={{ width: COLS * CELL, height: ROWS * CELL }}>
+        <canvas
+          ref={canvasRef}
+          width={COLS * CELL}
+          height={ROWS * CELL}
+          style={{ display: "block", border: "1px solid rgba(0,255,80,0.2)", boxShadow: "0 0 20px rgba(0,255,80,0.1)" }}
+        />
+        {!started && !dead && (
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)" }}>
+            <p className="font-mono text-sm animate-pulse" style={{ color: "rgba(0,255,80,0.9)", textShadow: "0 0 10px rgba(0,255,80,0.8)" }}>
+              PRESS ARROW KEYS TO START
+            </p>
+          </div>
+        )}
+        {dead && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ background: "rgba(0,0,0,0.7)" }}>
+            <p className="font-mono text-lg font-bold" style={{ color: "rgba(255,80,80,0.9)", textShadow: "0 0 12px rgba(255,80,80,0.8)" }}>
+              GAME OVER
+            </p>
+            <p className="font-mono text-sm" style={{ color: "rgba(0,255,80,0.7)" }}>Score: {score}</p>
+            <p className="font-mono text-xs animate-pulse" style={{ color: "rgba(0,255,80,0.5)" }}>[R] restart  [ESC] quit</p>
+          </div>
+        )}
+      </div>
+      <p className="font-mono text-[10px] opacity-40" style={{ color: "rgba(0,255,80,0.9)" }}>
+        WASD or Arrow Keys to move
+      </p>
+    </div>
+  );
+}
 
 interface RetroCRTProps {
   onAIInfo: () => void;
@@ -33,6 +236,7 @@ const COMMANDS: Record<string, () => string> = {
   cat contact.txt      — display contact info
   ai --info            — open AI workflow panel
   download_cv          — download CV (PDF)
+  snake                — launch snake minigame
   clear                — clear terminal
   help                 — show this message`,
   "ls /experience": () =>
@@ -72,6 +276,7 @@ function PhosphorGlow() {
 }
 
 export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
+  const { play } = useSound();
   const [booted, setBooted] = useState(false);
   const [open, setOpen] = useState(false);
   const [flickering, setFlickering] = useState(false);
@@ -80,6 +285,7 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
+  const [snakeMode, setSnakeMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -104,6 +310,7 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
 
   const handleBoot = () => {
     if (open) return;
+    play("terminal");
     setOpen(true);
     setBooted(false);
     setBootLines([]);
@@ -130,7 +337,9 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
   };
 
   const handleClose = () => {
+    play("click");
     setOpen(false);
+    setSnakeMode(false);
     setTimeout(() => {
       setBooted(false);
       setBootLines([]);
@@ -144,10 +353,16 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
       const trimmed = cmd.trim().toLowerCase();
       const newLines: Line[] = [...lines, { type: "input", text: `$ ${cmd}` }];
 
-      if (trimmed === "ai --info") {
+      if (trimmed === "snake") {
+        play("xp");
+        setLines([...newLines, { type: "output", text: "Launching SNAKE... use arrow keys or WASD. ESC to quit." }]);
+        setTimeout(() => setSnakeMode(true), 400);
+      } else if (trimmed === "ai --info") {
+        play("xp");
         setLines([...newLines, { type: "output", text: "Opening AI Workflow panel..." }]);
         onAIInfo();
       } else if (trimmed === "download_cv") {
+        play("xp");
         setLines([
           ...newLines,
           { type: "output", text: "Initiating CV download... transferring Chester_Descallar_CV.pdf" },
@@ -157,6 +372,7 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
         a.download = "Chester_Descallar_CV.pdf";
         a.click();
       } else if (COMMANDS[trimmed]) {
+        play("click");
         const result = COMMANDS[trimmed]();
         if (result === "__CLEAR__") {
           setLines([]);
@@ -166,6 +382,7 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
       } else if (trimmed === "") {
         setLines(newLines);
       } else {
+        play("error");
         setLines([
           ...newLines,
           { type: "error", text: `bash: ${cmd}: command not found — try "help"` },
@@ -176,7 +393,7 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
       setHistoryIdx(-1);
       setInput("");
     },
-    [lines, onAIInfo]
+    [lines, onAIInfo, play]
   );
 
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -381,6 +598,13 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
               )}
 
               {/* Terminal body */}
+              {snakeMode ? (
+                <SnakeGame play={play} onQuit={() => {
+                  setSnakeMode(false);
+                  play("click");
+                  setLines((prev) => [...prev, { type: "output", text: "Snake session ended. Type 'help' for commands." }]);
+                }} />
+              ) : (
               <div className="relative z-20 flex-1 overflow-y-auto p-4 font-mono text-sm space-y-0.5 scroll-smooth">
                 {/* Boot sequence */}
                 {bootLines.map((line, i) => (
@@ -430,9 +654,10 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
                   </motion.div>
                 )}
               </div>
+              )}
 
               {/* Input row */}
-              {booted && (
+              {booted && !snakeMode && (
                 <div
                   className="relative z-20 flex items-center gap-2 px-4 py-3 border-t"
                   style={{ borderColor: "rgba(0,255,80,0.12)", background: "rgba(0,10,0,0.5)" }}

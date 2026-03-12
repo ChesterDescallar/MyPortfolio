@@ -22,8 +22,10 @@ export default function Timeline({ isOptimized }: TimelineProps) {
       // On Turbopack (dev) the module resolves to the HC object itself — skip.
       if (!xrangeInitialised) {
         xrangeInitialised = true;
-        if (!HC.seriesTypes?.xrange) {
-          const mod = await import("highcharts/modules/xrange");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (!(HC as any).seriesTypes?.xrange) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const mod: any = await import("highcharts/modules/xrange");
           const fn = typeof mod.default === "function" ? mod.default : typeof mod === "function" ? mod : null;
           if (fn) fn(HC);
         }

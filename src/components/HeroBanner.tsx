@@ -63,9 +63,9 @@ function drawBird(ctx: CanvasRenderingContext2D, bird: Bird, isOptimized: boolea
 export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const birdsRef = useRef<Bird[]>([]);
-  const countRef = useRef(30);
+  const countRef = useRef(5);
   const rafRef = useRef<number>(0);
-  const [count, setCount] = useState(30);
+  const [count, setCount] = useState(5);
   const [cogOpen, setCogOpen] = useState(false);
 
   useEffect(() => { countRef.current = count; }, [count]);
@@ -157,8 +157,8 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
         />
       )}
 
-      {/* Avatar — right side, bottom-aligned, swaps per mode. Hidden on mobile */}
-      <div className="absolute right-0 bottom-0 top-0 w-44 sm:w-56 hidden sm:flex items-end justify-end pointer-events-none select-none">
+      {/* Avatar — right side, bottom-aligned, swaps per mode */}
+      <div className="absolute right-0 bottom-0 top-0 w-28 sm:w-44 md:w-56 flex items-end justify-end pointer-events-none select-none opacity-40 sm:opacity-100">
         <img
           src={isOptimized ? "/me-blue-bg.png" : "/me-white-bg.png"}
           alt="Chester avatar"
@@ -173,8 +173,8 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
         className="absolute inset-0 z-10 w-full h-full pointer-events-none"
       />
 
-      {/* Content slot — full width on mobile, offset right on sm+ */}
-      <div className="relative z-20 p-4 sm:p-6 sm:pr-52">
+      {/* Content slot */}
+      <div className="relative z-20 p-4 sm:p-6 pr-32 sm:pr-48 md:pr-60">
         {children}
       </div>
 

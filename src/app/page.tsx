@@ -26,6 +26,8 @@ import {
   Award,
   Volume2,
   VolumeX,
+  Github,
+  Linkedin,
 } from "lucide-react";
 import { useSound } from "@/lib/sound";
 import SkillsGrid from "@/components/SkillsGrid";
@@ -193,6 +195,30 @@ export default function Home() {
         </motion.div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Social links */}
+          <a
+            href="https://github.com/ChesterDescallar"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            onClick={() => play("click")}
+            className={`transition-colors ${isOptimized ? "text-slate-500 hover:text-slate-300" : "text-gray-400 hover:text-gray-700"}`}
+          >
+            <Github className="size-4" />
+          </a>
+          <a
+            href="https://www.linkedin.com/in/chesterdescallar/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            onClick={() => play("click")}
+            className={`transition-colors ${isOptimized ? "text-slate-500 hover:text-sky-400" : "text-gray-400 hover:text-blue-600"}`}
+          >
+            <Linkedin className="size-4" />
+          </a>
+
+          <div className={`w-px h-4 ${isOptimized ? "bg-white/10" : "bg-gray-200"}`} />
+
           {/* Volume — icon only on mobile, slider on sm+ */}
           <div className="flex items-center gap-1 sm:gap-1.5 group">
             <button
@@ -632,7 +658,35 @@ export default function Home() {
                 <span className="hidden sm:inline"> &nbsp;·&nbsp; 07588 220203</span>
               </p>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap items-center">
+              <a
+                href="https://github.com/ChesterDescallar"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                onClick={() => play("click")}
+                className={`inline-flex items-center justify-center size-7 rounded-md border transition-colors ${
+                  isOptimized
+                    ? "border-white/20 text-slate-400 hover:text-slate-200 hover:bg-white/10"
+                    : "border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+              >
+                <Github className="size-3.5" />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/chesterdescallar/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                onClick={() => play("click")}
+                className={`inline-flex items-center justify-center size-7 rounded-md border transition-colors ${
+                  isOptimized
+                    ? "border-white/20 text-slate-400 hover:text-sky-400 hover:bg-white/10"
+                    : "border-gray-200 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                }`}
+              >
+                <Linkedin className="size-3.5" />
+              </a>
               <Button
                 size="sm"
                 variant={isOptimized ? "outline" : "default"}
@@ -666,8 +720,8 @@ export default function Home() {
       <MetricsModal open={metricsOpen} onClose={() => setMetricsOpen(false)} isOptimized={isOptimized} />
       <AIModal open={aiOpen} onClose={() => setAiOpen(false)} isOptimized={isOptimized} />
 
-      {/* ── STICKY RETRO CRT — hidden on mobile, visible md+ ─────────────── */}
-      <div className="hidden md:block fixed bottom-6 right-6 z-40 scale-75 origin-bottom-right">
+      {/* ── STICKY RETRO CRT ──────────────────────────────────────────────── */}
+      <div className="fixed bottom-4 right-2 z-40 scale-50 origin-bottom-right sm:scale-[0.65] md:scale-75">
         <RetroCRT onAIInfo={() => setAiOpen(true)} />
       </div>
 

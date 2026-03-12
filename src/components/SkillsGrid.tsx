@@ -219,7 +219,7 @@ export default function SkillsGrid({ isOptimized }: SkillsGridProps) {
   if (!isOptimized) {
     // ── LEGACY: simple expandable cards ──────────────────────────────────────
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {categories.map((cat, i) => {
           const a = accentMap[cat.accent];
           const isOpen = active === cat.id;
@@ -244,11 +244,11 @@ export default function SkillsGrid({ isOptimized }: SkillsGridProps) {
                 <ChevronDown className={`size-3.5 transition-transform duration-200 text-gray-400 ${isOpen ? "rotate-180" : ""}`} />
               </div>
               {!isOpen && (
-                <div className="flex items-center gap-1.5 px-3.5 pb-3">
-                  {cat.items.slice(0, 3).map((item) => (
-                    <span key={item.name} className="text-xs px-2 py-0.5 rounded-full border bg-gray-50 text-gray-500 border-gray-200">{item.name}</span>
+                <div className="flex flex-wrap items-center gap-1.5 px-3.5 pb-3">
+                  {cat.items.slice(0, 4).map((item) => (
+                    <span key={item.name} className="text-xs px-2 py-0.5 rounded-full border bg-gray-50 text-gray-500 border-gray-200 whitespace-nowrap">{item.name}</span>
                   ))}
-                  {cat.items.length > 3 && <span className="text-xs text-gray-400">+{cat.items.length - 3}</span>}
+                  {cat.items.length > 4 && <span className="text-xs text-gray-400 whitespace-nowrap">+{cat.items.length - 4}</span>}
                 </div>
               )}
               <AnimatePresence initial={false}>
@@ -283,7 +283,7 @@ export default function SkillsGrid({ isOptimized }: SkillsGridProps) {
         <span className="text-xs font-mono text-slate-600">4 YRS EXP</span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {categories.map((cat, i) => {
           const a = accentMap[cat.accent];
           const isOpen = active === cat.id;

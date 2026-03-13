@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Terminal } from "lucide-react";
 import { useSound } from "@/lib/sound";
 
 // ─── Snake Game ────────────────────────────────────────────────────────────────
@@ -182,6 +182,8 @@ function SnakeGame({ onQuit, play }: { onQuit: () => void; play: (s: "xp" | "err
           ref={canvasRef}
           width={COLS * CELL}
           height={ROWS * CELL}
+          role="img"
+          aria-label="Snake game"
           style={{ display: "block", border: "1px solid rgba(0,255,80,0.2)", boxShadow: "0 0 20px rgba(0,255,80,0.1)" }}
         />
         {!started && !dead && (
@@ -210,6 +212,8 @@ function SnakeGame({ onQuit, play }: { onQuit: () => void; play: (s: "xp" | "err
 
 interface RetroCRTProps {
   onAIInfo: () => void;
+  /** When true, renders only a compact pill button (for mobile). */
+  mobileOnly?: boolean;
 }
 
 interface Line {
@@ -275,7 +279,7 @@ function PhosphorGlow() {
   );
 }
 
-export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
+export default function RetroCRT({ onAIInfo, mobileOnly = false }: RetroCRTProps) {
   const { play } = useSound();
   const [booted, setBooted] = useState(false);
   const [open, setOpen] = useState(false);
@@ -288,6 +292,11 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
   const [snakeMode, setSnakeMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => clearAllTimeouts();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -308,6 +317,17 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  };
+
+  const addTimeout = (fn: () => void, delay: number) => {
+    const id = setTimeout(fn, delay);
+    timeoutsRef.current.push(id);
+    return id;
+  };
+
   const handleBoot = () => {
     if (open) return;
     play("terminal");
@@ -317,18 +337,18 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
     setLines([]);
 
     // Wait for expand animation (300ms) then flicker for 400ms then boot
-    setTimeout(() => {
+    addTimeout(() => {
       setFlickering(true);
-      setTimeout(() => {
+      addTimeout(() => {
         setFlickering(false);
         let i = 0;
         const tick = () => {
           if (i < BOOT_LINES.length) {
             setBootLines((prev) => [...prev, BOOT_LINES[i]]);
             i++;
-            setTimeout(tick, 80);
+            addTimeout(tick, 80);
           } else {
-            setTimeout(() => setBooted(true), 300);
+            addTimeout(() => setBooted(true), 300);
           }
         };
         tick();
@@ -338,9 +358,10 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
 
   const handleClose = () => {
     play("click");
+    clearAllTimeouts();
     setOpen(false);
     setSnakeMode(false);
-    setTimeout(() => {
+    addTimeout(() => {
       setBooted(false);
       setBootLines([]);
       setLines([]);
@@ -414,7 +435,25 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
 
   return (
     <>
-      {/* ── RETRO MONITOR ─────────────────────────────────────────────────────── */}
+      {/* ── TRIGGER ───────────────────────────────────────────────────────────── */}
+      {mobileOnly ? (
+        /* Mobile pill button */
+        <button
+          onClick={handleBoot}
+          aria-label="Open terminal"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full font-mono text-xs font-semibold shadow-lg transition-all active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, #1a2e1a 0%, #0d1f0d 100%)",
+            border: "1px solid rgba(0,255,80,0.25)",
+            color: "rgba(0,255,80,0.9)",
+            boxShadow: "0 0 16px rgba(0,255,80,0.15)",
+          }}
+        >
+          <Terminal className="size-3.5" aria-hidden="true" />
+          Terminal
+        </button>
+      ) : (
+      /* ── RETRO MONITOR ──────────────────────────────────────────────────── */
       <div className="flex flex-col items-center group cursor-pointer" onClick={handleBoot}>
         {/* Chassis */}
         <motion.div
@@ -520,6 +559,7 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
           Click to Boot Terminal
         </p>
       </div>
+      )}
 
       {/* ── FULLSCREEN TERMINAL — rendered via portal to escape transform context ── */}
       {typeof document !== "undefined" && createPortal(
@@ -582,9 +622,10 @@ export default function RetroCRT({ onAIInfo }: RetroCRTProps) {
                 </div>
                 <button
                   onClick={handleClose}
+                  aria-label="Close terminal"
                   className="text-green-700 hover:text-green-400 transition-colors z-20"
                 >
-                  <X className="size-4" />
+                  <X className="size-4" aria-hidden="true" />
                 </button>
               </div>
 

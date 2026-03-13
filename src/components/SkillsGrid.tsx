@@ -15,35 +15,61 @@ type Tier = "S" | "A" | "B" | "C";
 interface SkillItem { name: string; xp: number; tier: Tier; }
 
 // ── Brand icon SVGs (inline, no extra deps) ───────────────────────────────────
+function BrandIconFallback({ name, dark }: { name: string; dark: boolean }) {
+  return (
+    <div
+      style={{ display: "none" }}
+      className={`w-10 h-10 rounded-lg items-center justify-center text-xs font-bold ${dark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-600"}`}
+    >
+      {name.slice(0, 2)}
+    </div>
+  );
+}
+
+function BrandImg({ src, cls, alt }: { src: string; cls: string; alt: string }) {
+  return (
+    <img
+      src={src}
+      className={cls}
+      alt={alt}
+      loading="lazy"
+      onError={(e) => {
+        const target = e.currentTarget;
+        target.style.display = "none";
+        const fallback = target.nextElementSibling as HTMLElement | null;
+        if (fallback) fallback.style.display = "flex";
+      }}
+    />
+  );
+}
+
 function BrandIcon({ name, dark }: { name: string; dark: boolean }) {
   const cls = `w-10 h-10 ${dark ? "opacity-80" : ""}`;
+  const fb = <BrandIconFallback name={name} dark={dark} />;
+
   switch (name) {
-    case "React":      return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" className={cls} alt="React" />;
-    case "Vue 2 & 3":  return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" className={cls} alt="Vue" />;
-    case "TypeScript": return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" className={cls} alt="TS" />;
-    case "Next.js":    return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" className={`${cls} ${dark ? "" : "invert"}`} alt="Next.js" />;
-    case "Tailwind CSS": return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" className={cls} alt="Tailwind" />;
-    case "JavaScript": return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" className={cls} alt="JS" />;
-    case "PHP 8+":     return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" className={cls} alt="PHP" />;
-    case "Laravel 9+": return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg" className={cls} alt="Laravel" />;
-    case "MySQL":      return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" className={cls} alt="MySQL" />;
-    case "GraphQL":    return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/graphql/graphql-plain.svg" className={cls} alt="GraphQL" />;
-    case "Vitest":     return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitest/vitest-original.svg" className={cls} alt="Vitest" />;
-    case "Jest":       return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jest/jest-plain.svg" className={cls} alt="Jest" />;
-    case "Playwright": return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/playwright/playwright-original.svg" className={cls} alt="Playwright" />;
-    case "Cypress":    return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cypressio/cypressio-original.svg" className={cls} alt="Cypress" />;
-    case "Git":        return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" className={cls} alt="Git" />;
-    case "GitHub":     return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" className={`${cls} ${dark ? "invert" : ""}`} alt="GitHub" />;
-    case "Docker":     return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" className={cls} alt="Docker" />;
-    case "Python":     return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" className={cls} alt="Python" />;
-    case "VS Code":    return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" className={cls} alt="VS Code" />;
-    case "Jira":       return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg" className={cls} alt="Jira" />;
-    case "Figma":      return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg" className={cls} alt="Figma" />;
-    default: return (
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold ${dark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-600"}`}>
-        {name.slice(0, 2)}
-      </div>
-    );
+    case "React":      return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" cls={cls} alt="React" />}{fb}</>;
+    case "Vue 2 & 3":  return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" cls={cls} alt="Vue" />}{fb}</>;
+    case "TypeScript": return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" cls={cls} alt="TypeScript" />}{fb}</>;
+    case "Next.js":    return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" cls={`${cls} ${dark ? "" : "invert"}`} alt="Next.js" />}{fb}</>;
+    case "Tailwind CSS": return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" cls={cls} alt="Tailwind CSS" />}{fb}</>;
+    case "JavaScript": return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" cls={cls} alt="JavaScript" />}{fb}</>;
+    case "PHP 8+":     return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" cls={cls} alt="PHP" />}{fb}</>;
+    case "Laravel 9+": return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg" cls={cls} alt="Laravel" />}{fb}</>;
+    case "MySQL":      return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" cls={cls} alt="MySQL" />}{fb}</>;
+    case "GraphQL":    return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/graphql/graphql-plain.svg" cls={cls} alt="GraphQL" />}{fb}</>;
+    case "Vitest":     return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitest/vitest-original.svg" cls={cls} alt="Vitest" />}{fb}</>;
+    case "Jest":       return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jest/jest-plain.svg" cls={cls} alt="Jest" />}{fb}</>;
+    case "Playwright": return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/playwright/playwright-original.svg" cls={cls} alt="Playwright" />}{fb}</>;
+    case "Cypress":    return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cypressio/cypressio-original.svg" cls={cls} alt="Cypress" />}{fb}</>;
+    case "Git":        return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" cls={cls} alt="Git" />}{fb}</>;
+    case "GitHub":     return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" cls={`${cls} ${dark ? "invert" : ""}`} alt="GitHub" />}{fb}</>;
+    case "Docker":     return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" cls={cls} alt="Docker" />}{fb}</>;
+    case "Python":     return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" cls={cls} alt="Python" />}{fb}</>;
+    case "VS Code":    return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" cls={cls} alt="VS Code" />}{fb}</>;
+    case "Jira":       return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg" cls={cls} alt="Jira" />}{fb}</>;
+    case "Figma":      return <>{<BrandImg src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg" cls={cls} alt="Figma" />}{fb}</>;
+    default: return <BrandIconFallback name={name} dark={dark} />;
   }
 }
 
@@ -145,14 +171,14 @@ function SkillsModal({ open, onClose, isOptimized, isDark }: { open: boolean; on
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isOptimized ? "bg-slate-900 border-white/10 text-slate-100" : isDark ? "bg-gray-950 border-white/10 text-gray-100" : "bg-white border-gray-200 text-gray-900"}`}>
-        <DialogHeader>
+      <DialogContent className={`max-w-2xl flex flex-col max-h-[80vh] min-h-0 ${isOptimized ? "bg-slate-900 border-white/10 text-slate-100" : isDark ? "bg-gray-950 border-white/10 text-gray-100" : "bg-white border-gray-200 text-gray-900"}`}>
+        <DialogHeader className="shrink-0">
           <DialogTitle className={`flex items-center gap-2 ${isOptimized ? "font-mono text-white" : isDark ? "text-gray-100 font-bold" : "font-bold text-gray-900"}`}>
             <Swords className="size-5 text-sky-400" />
             Full Technical Skillset
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3 mt-2">
+        <div className="grid gap-3 mt-2 overflow-y-auto overscroll-contain min-h-0 pr-1">
           {categories.map((cat, i) => {
             const a = accentMap[cat.accent];
             const isOpen = active === cat.id;
@@ -171,8 +197,13 @@ function SkillsModal({ open, onClose, isOptimized, isDark }: { open: boolean; on
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isOpen}
+                aria-label={`${cat.label} — ${cat.items.length} skills`}
                 className={`border rounded-xl cursor-pointer transition-all duration-200 select-none ${cardCls}`}
                 onClick={() => setActive(isOpen ? null : cat.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(isOpen ? null : cat.id); } }}
               >
                 <div className="flex items-center justify-between p-3.5">
                   <div className="flex items-center gap-2.5">
@@ -308,10 +339,15 @@ function RPGGrid() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
+              role="button"
+              tabIndex={0}
+              aria-expanded={isOpen}
+              aria-label={`${cat.label} — ${cat.items.length} skills`}
               className={`border rounded-xl cursor-pointer transition-all duration-200 select-none ${
                 isOpen ? `bg-white/8 ${a.ring} ring-1 border-white/20` : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
               }`}
               onClick={() => { setActive(isOpen ? null : cat.id); play(isOpen ? "click" : "xp"); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(isOpen ? null : cat.id); play(isOpen ? "click" : "xp"); } }}
             >
               <div className="flex items-center justify-between p-3.5 pb-2">
                 <div className="flex items-center gap-2.5">

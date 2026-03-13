@@ -24,6 +24,29 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Chester Descallar // Software Engineer",
   description: "Interactive technical case study — from legacy to optimized.",
+  metadataBase: new URL("https://chesterdescallar.dev"),
+  openGraph: {
+    title: "Chester Descallar // Software Engineer",
+    description: "Interactive technical case study — from legacy to optimized.",
+    url: "https://chesterdescallar.dev",
+    siteName: "Chester Descallar Portfolio",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Chester Descallar — Software Engineer",
+      },
+    ],
+    type: "website",
+    locale: "en_GB",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Chester Descallar // Software Engineer",
+    description: "Interactive technical case study — from legacy to optimized.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

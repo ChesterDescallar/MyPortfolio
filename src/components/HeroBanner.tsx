@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, X } from "lucide-react";
+import Image from "next/image";
 
 interface HeroBannerProps {
   isOptimized: boolean;
@@ -128,7 +129,20 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
     };
 
     rafRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafRef.current);
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafRef.current);
+      } else {
+        rafRef.current = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [isOptimized]);
 
   const PRESETS = [
@@ -162,17 +176,21 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
 
       {/* Avatar — right side, bottom-aligned, swaps per mode */}
       <div className="absolute right-0 bottom-0 top-0 w-28 sm:w-44 md:w-56 flex items-end justify-end pointer-events-none select-none opacity-40 sm:opacity-100">
-        <img
+        <Image
           src={isOptimized ? "/me-blue-bg.png" : isDark ? "/me-dark-bg.png" : "/me-white-bg.png"}
-          alt="Chester avatar"
-          className="h-full object-contain object-bottom"
+          alt="Chester Descallar"
+          fill
+          className="object-contain object-bottom"
           draggable={false}
+          priority
         />
       </div>
 
       {/* Bird canvas — above everything */}
       <canvas
         ref={canvasRef}
+        role="img"
+        aria-label="Animated birds flying across the banner"
         className="absolute inset-0 z-10 w-full h-full pointer-events-none"
       />
 

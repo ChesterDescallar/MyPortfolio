@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Bot, Zap, Code2, GitBranch } from "lucide-react";
+import { Bot, Zap, Layers, GitBranch } from "lucide-react";
 
 interface AIModalProps {
   open: boolean;
@@ -12,10 +12,30 @@ interface AIModalProps {
 }
 
 const tools = [
-  { icon: Bot, name: "Claude / ChatGPT", desc: "Architecture design, code review, PR summarisation" },
-  { icon: Zap, name: "GitHub Copilot", desc: "Real-time inline completions, test scaffolding" },
-  { icon: Code2, name: "Cursor IDE", desc: "Multi-file context editing, refactoring sweeps" },
-  { icon: GitBranch, name: "AI-assisted CI/CD", desc: "Automated changelog generation, smart diff reviews" },
+  {
+    icon: Bot,
+    name: "Claude Code (Agentic Workflow)",
+    desc: "Autonomous multi-step coding agent — runs tasks end-to-end using skills, reads context across files, and executes with minimal hand-holding. Used daily for migrations, refactors, and feature work.",
+    color: "text-sky-400",
+  },
+  {
+    icon: Zap,
+    name: "Augment / Auggie",
+    desc: "AI pair programmer with deep codebase awareness. Auggie understands the full repo context — used for inline completions, test scaffolding, and real-time code review inside the IDE.",
+    color: "text-violet-400",
+  },
+  {
+    icon: Layers,
+    name: "Beads Methodology",
+    desc: "Breaking complex tasks into discrete, composable 'beads' — small, well-scoped units that an AI agent can execute reliably in sequence. Keeps agentic sessions focused and auditable.",
+    color: "text-emerald-400",
+  },
+  {
+    icon: GitBranch,
+    name: "Ralph Wiggum Principle",
+    desc: "Writing prompts and tasks as if the AI has no prior context — explicit, literal, and self-contained. Eliminates ambiguity so agents produce predictable, production-ready output every time.",
+    color: "text-amber-400",
+  },
 ];
 
 export default function AIModal({ open, onClose, isOptimized }: AIModalProps) {
@@ -36,7 +56,7 @@ export default function AIModal({ open, onClose, isOptimized }: AIModalProps) {
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <p className={`text-sm ${isOptimized ? "text-slate-400" : "text-gray-500"}`}>
-            Integrated AI tooling accelerates velocity without sacrificing code quality or ownership.
+            Day-to-day development powered by agentic AI — not just autocomplete, but autonomous agents that plan, execute, and iterate across the full codebase.
           </p>
           <div className="grid gap-3">
             {tools.map((t, i) => (
@@ -49,16 +69,16 @@ export default function AIModal({ open, onClose, isOptimized }: AIModalProps) {
                   isOptimized ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"
                 }`}
               >
-                <t.icon className="size-5 shrink-0 text-sky-400 mt-0.5" />
+                <t.icon className={`size-5 shrink-0 mt-0.5 ${t.color}`} />
                 <div>
-                  <p className={`text-sm font-medium ${isOptimized ? "text-white" : "text-gray-900"}`}>{t.name}</p>
-                  <p className={`text-xs mt-0.5 ${isOptimized ? "text-slate-400" : "text-gray-500"}`}>{t.desc}</p>
+                  <p className={`text-sm font-semibold ${isOptimized ? "text-white font-mono" : "text-gray-900"}`}>{t.name}</p>
+                  <p className={`text-xs mt-0.5 leading-relaxed ${isOptimized ? "text-slate-400" : "text-gray-500"}`}>{t.desc}</p>
                 </div>
               </motion.div>
             ))}
           </div>
           <div className="flex flex-wrap gap-2 pt-1">
-            {["Cursor", "Claude", "Copilot", "GPT-4o", "Codeium"].map((tag) => (
+            {["Claude Code", "Augment", "Beads", "Ralph Wiggum", "Agentic"].map((tag) => (
               <Badge
                 key={tag}
                 className={

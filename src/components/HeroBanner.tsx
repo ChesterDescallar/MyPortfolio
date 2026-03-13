@@ -6,6 +6,7 @@ import { Settings, X } from "lucide-react";
 
 interface HeroBannerProps {
   isOptimized: boolean;
+  isDark?: boolean;
   children: React.ReactNode;
 }
 
@@ -60,7 +61,7 @@ function drawBird(ctx: CanvasRenderingContext2D, bird: Bird, isOptimized: boolea
   ctx.restore();
 }
 
-export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
+export default function HeroBanner({ isOptimized, isDark = false, children }: HeroBannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const birdsRef = useRef<Bird[]>([]);
   const countRef = useRef(5);
@@ -144,7 +145,9 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
       <div className={`absolute inset-0 ${
         isOptimized
           ? "bg-[#0a0f1a]"
-          : "bg-white"
+          : isDark
+            ? "bg-gray-900"
+            : "bg-white"
       }`} />
       {/* Optimized: subtle grid overlay */}
       {isOptimized && (
@@ -160,7 +163,7 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
       {/* Avatar — right side, bottom-aligned, swaps per mode */}
       <div className="absolute right-0 bottom-0 top-0 w-28 sm:w-44 md:w-56 flex items-end justify-end pointer-events-none select-none opacity-40 sm:opacity-100">
         <img
-          src={isOptimized ? "/me-blue-bg.png" : "/me-white-bg.png"}
+          src={isOptimized ? "/me-blue-bg.png" : isDark ? "/me-dark-bg.png" : "/me-white-bg.png"}
           alt="Chester avatar"
           className="h-full object-contain object-bottom"
           draggable={false}
@@ -185,7 +188,9 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
           className={`size-8 rounded-lg flex items-center justify-center backdrop-blur-sm transition-colors ${
             isOptimized
               ? "bg-black/30 border border-white/10 text-slate-400 hover:text-slate-200 hover:bg-black/50"
-              : "bg-white/70 border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-white/90"
+              : isDark
+                ? "bg-black/30 border border-white/10 text-gray-400 hover:text-gray-200 hover:bg-black/50"
+                : "bg-white/70 border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-white/90"
           }`}
           style={{ transition: "background 0.15s, color 0.15s" }}
           aria-label="Bird settings"
@@ -203,11 +208,13 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
               className={`absolute right-0 top-10 w-48 sm:w-52 rounded-xl border p-4 shadow-xl ${
                 isOptimized
                   ? "bg-slate-900/95 border-white/10 backdrop-blur-md"
-                  : "bg-white/95 border-gray-200 backdrop-blur-md"
+                  : isDark
+                    ? "bg-gray-900/95 border-white/10 backdrop-blur-md"
+                    : "bg-white/95 border-gray-200 backdrop-blur-md"
               }`}
             >
               <p className={`text-[10px] font-medium uppercase tracking-widest mb-3 ${
-                isOptimized ? "font-mono text-slate-500" : "text-gray-400"
+                isOptimized ? "font-mono text-slate-500" : isDark ? "text-gray-500" : "text-gray-400"
               }`}>
                 {isOptimized ? "BIRD_DENSITY" : "Bird density"}
               </p>
@@ -220,10 +227,10 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
                     onClick={() => setCount(p.value)}
                     className={`flex-1 text-[9px] px-1 py-1 rounded border transition-colors font-mono ${
                       count === p.value
-                        ? isOptimized
+                        ? isOptimized || isDark
                           ? "bg-sky-500/20 border-sky-500/40 text-sky-400"
                           : "bg-blue-100 border-blue-300 text-blue-700"
-                        : isOptimized
+                        : isOptimized || isDark
                           ? "border-white/10 text-slate-500 hover:text-slate-300"
                           : "border-gray-200 text-gray-400 hover:text-gray-600"
                     }`}
@@ -234,10 +241,10 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
               </div>
 
               <div className="flex items-center justify-between mb-1.5">
-                <span className={`text-[10px] ${isOptimized ? "font-mono text-slate-500" : "text-gray-400"}`}>
+                <span className={`text-[10px] ${isOptimized ? "font-mono text-slate-500" : isDark ? "text-gray-500" : "text-gray-400"}`}>
                   Custom
                 </span>
-                <span className={`text-xs font-bold ${isOptimized ? "font-mono text-sky-400" : "text-gray-600"}`}>
+                <span className={`text-xs font-bold ${isOptimized ? "font-mono text-sky-400" : isDark ? "text-gray-300" : "text-gray-600"}`}>
                   {count} birds
                 </span>
               </div>
@@ -250,14 +257,14 @@ export default function HeroBanner({ isOptimized, children }: HeroBannerProps) {
                 value={count}
                 onChange={(e) => setCount(parseInt(e.target.value))}
                 className={`w-full h-1.5 appearance-none rounded-full outline-none cursor-pointer ${
-                  isOptimized
+                  isOptimized || isDark
                     ? "[&::-webkit-slider-runnable-track]:bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-400 [&::-webkit-slider-thumb]:border-0"
                     : "[&::-webkit-slider-runnable-track]:bg-gray-200 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:border-0"
                 }`}
               />
               <div className="flex justify-between mt-1">
-                <span className={`text-[9px] ${isOptimized ? "font-mono text-slate-600" : "text-gray-400"}`}>0</span>
-                <span className={`text-[9px] ${isOptimized ? "font-mono text-slate-600" : "text-gray-400"}`}>120</span>
+                <span className={`text-[9px] ${isOptimized ? "font-mono text-slate-600" : isDark ? "text-gray-600" : "text-gray-400"}`}>0</span>
+                <span className={`text-[9px] ${isOptimized ? "font-mono text-slate-600" : isDark ? "text-gray-600" : "text-gray-400"}`}>120</span>
               </div>
             </motion.div>
           )}

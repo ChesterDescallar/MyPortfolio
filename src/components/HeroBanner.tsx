@@ -11,63 +11,74 @@ interface HeroBannerProps {
   children: React.ReactNode;
 }
 
-interface Bird {
+interface Star {
   x: number;
   y: number;
-  speed: number;
-  scale: number;
-  wingPhase: number;      // 0–2π, drives wing flap
-  wingSpeed: number;      // radians per frame
-  alpha: number;
-  flock: number;          // group id for loose flocking (y offset drift)
-  drift: number;          // gentle vertical drift speed
-  driftDir: number;       // +1 / -1
+  radius: number;       // base radius
+  phase: number;        // 0–2π, drives twinkle
+  phaseSpeed: number;   // radians per frame
+  baseAlpha: number;    // resting opacity
+  spikes: number;       // 4 or 6 point star
 }
 
-function makeBird(w: number, h: number): Bird {
+function makeStar(w: number, h: number): Star {
   return {
-    x: Math.random() * w * 1.5 - w * 0.5, // start off-screen left sometimes
-    y: Math.random() * h * 0.8,
-    speed: 0.6 + Math.random() * 1.4,
-    scale: 0.4 + Math.random() * 0.8,
-    wingPhase: Math.random() * Math.PI * 2,
-    wingSpeed: 0.06 + Math.random() * 0.07,
-    alpha: 0.5 + Math.random() * 0.45,
-    flock: Math.floor(Math.random() * 5),
-    drift: 0.08 + Math.random() * 0.12,
-    driftDir: Math.random() > 0.5 ? 1 : -1,
+    x: Math.random() * w,
+    y: Math.random() * h,
+    radius: 0.8 + Math.random() * 2.2,
+    phase: Math.random() * Math.PI * 2,
+    phaseSpeed: 0.012 + Math.random() * 0.03,
+    baseAlpha: 0.25 + Math.random() * 0.55,
+    spikes: Math.random() > 0.35 ? 4 : 6,
   };
 }
 
-/** Draw a single bird as a simple M/V wing shape */
-function drawBird(ctx: CanvasRenderingContext2D, bird: Bird, isOptimized: boolean) {
-  const wingFlap = Math.sin(bird.wingPhase);   // -1 → 1
-  const wingSpread = bird.scale * 14;
-  const wingDip = wingFlap * bird.scale * 6;   // tip dip
+/** Draw a 4- or 6-pointed star with a soft glow */
+function drawStar(ctx: CanvasRenderingContext2D, star: Star, isOptimized: boolean, isDark: boolean) {
+  const twinkle = (Math.sin(star.phase) + 1) / 2;          // 0→1
+  const r = star.radius * (0.6 + twinkle * 0.7);           // pulsing size
+  const alpha = star.baseAlpha * (0.4 + twinkle * 0.6);    // pulsing opacity
+  const inner = r * 0.38;
+
+  // colour: optimized=sky-blue, dark=slate-300, light=slate-500
+  const hue   = isOptimized ? "180,220,255" : isDark ? "148,163,184" : "100,116,139";
+  const glow  = isOptimized ? `rgba(56,189,248,${alpha * 0.5})` : isDark ? `rgba(148,163,184,${alpha * 0.4})` : `rgba(100,116,139,${alpha * 0.35})`;
 
   ctx.save();
-  ctx.translate(bird.x, bird.y);
-  ctx.globalAlpha = bird.alpha;
-  ctx.strokeStyle = isOptimized ? "rgba(56,189,248,0.9)" : "rgba(30,30,30,0.75)";
-  ctx.lineWidth = bird.scale * 1.4;
-  ctx.lineCap = "round";
+  ctx.translate(star.x, star.y);
+  ctx.globalAlpha = alpha;
 
+  // Glow
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 3.5);
+  g.addColorStop(0, glow);
+  g.addColorStop(1, "transparent");
+  ctx.fillStyle = g;
   ctx.beginPath();
-  // Left wing tip → body centre → right wing tip (V shape with flap)
-  ctx.moveTo(-wingSpread, wingDip);
-  ctx.quadraticCurveTo(-wingSpread * 0.4, wingDip * 0.3, 0, 0);
-  ctx.quadraticCurveTo(wingSpread * 0.4, wingDip * 0.3, wingSpread, wingDip);
-  ctx.stroke();
+  ctx.arc(0, 0, r * 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Star shape
+  ctx.fillStyle = `rgba(${hue},${alpha})`;
+  ctx.beginPath();
+  const points = star.spikes;
+  for (let i = 0; i < points * 2; i++) {
+    const angle = (i * Math.PI) / points - Math.PI / 2;
+    const dist  = i % 2 === 0 ? r : inner;
+    i === 0 ? ctx.moveTo(Math.cos(angle) * dist, Math.sin(angle) * dist)
+            : ctx.lineTo(Math.cos(angle) * dist, Math.sin(angle) * dist);
+  }
+  ctx.closePath();
+  ctx.fill();
 
   ctx.restore();
 }
 
 export default function HeroBanner({ isOptimized, isDark = false, children }: HeroBannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const birdsRef = useRef<Bird[]>([]);
-  const countRef = useRef(5);
+  const starsRef = useRef<Star[]>([]);
+  const countRef = useRef(40);
   const rafRef = useRef<number>(0);
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(40);
   const [cogOpen, setCogOpen] = useState(false);
 
   useEffect(() => { countRef.current = count; }, [count]);
@@ -95,7 +106,7 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
     const h = canvas.offsetHeight || 420;
     canvas.width = w;
     canvas.height = h;
-    birdsRef.current = Array.from({ length: countRef.current }, () => makeBird(w, h));
+    starsRef.current = Array.from({ length: countRef.current }, () => makeStar(w, h));
 
     const loop = () => {
       const cw = canvas.width;
@@ -104,25 +115,12 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
 
       // Reconcile count
       const target = countRef.current;
-      while (birdsRef.current.length < target) birdsRef.current.push(makeBird(cw, ch));
-      if (birdsRef.current.length > target) birdsRef.current.length = target;
+      while (starsRef.current.length < target) starsRef.current.push(makeStar(cw, ch));
+      if (starsRef.current.length > target) starsRef.current.length = target;
 
-      for (const b of birdsRef.current) {
-        drawBird(ctx, b, isOptimized);
-
-        // Move right
-        b.x += b.speed;
-        // Gentle vertical drift
-        b.y += b.drift * b.driftDir;
-        if (b.y < 10 || b.y > ch * 0.85) b.driftDir *= -1;
-        // Wing flap
-        b.wingPhase += b.wingSpeed;
-
-        // Reset when off-screen right
-        if (b.x > cw + 30) {
-          b.x = -30;
-          b.y = Math.random() * ch * 0.8;
-        }
+      for (const s of starsRef.current) {
+        drawStar(ctx, s, isOptimized, isDark);
+        s.phase += s.phaseSpeed;
       }
 
       rafRef.current = requestAnimationFrame(loop);
@@ -147,9 +145,9 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
 
   const PRESETS = [
     { label: "off",    value: 0   },
-    { label: "few",   value: 10  },
-    { label: "flock", value: 30  },
-    { label: "many",  value: 80  },
+    { label: "few",    value: 20  },
+    { label: "many",   value: 60  },
+    { label: "dense",  value: 120 },
   ];
 
   return (
@@ -190,7 +188,7 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
       <canvas
         ref={canvasRef}
         role="img"
-        aria-label="Animated birds flying across the banner"
+        aria-label="Twinkling stars background"
         className="absolute inset-0 z-10 w-full h-full pointer-events-none"
       />
 
@@ -211,7 +209,7 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
                 : "bg-white/70 border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-white/90"
           }`}
           style={{ transition: "background 0.15s, color 0.15s" }}
-          aria-label="Bird settings"
+          aria-label="Star settings"
         >
           {cogOpen ? <X className="size-3.5" /> : <Settings className="size-3.5" />}
         </button>
@@ -234,7 +232,7 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
               <p className={`text-[10px] font-medium uppercase tracking-widest mb-3 ${
                 isOptimized ? "font-mono text-slate-500" : isDark ? "text-gray-500" : "text-gray-400"
               }`}>
-                {isOptimized ? "BIRD_DENSITY" : "Bird density"}
+                {isOptimized ? "STAR_DENSITY" : "Star density"}
               </p>
 
               {/* Preset buttons */}
@@ -263,7 +261,7 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
                   Custom
                 </span>
                 <span className={`text-xs font-bold ${isOptimized ? "font-mono text-sky-400" : isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  {count} birds
+                  {count} stars
                 </span>
               </div>
 

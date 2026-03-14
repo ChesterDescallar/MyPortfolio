@@ -175,7 +175,7 @@ export default function HeroBanner({ isOptimized, isDark = false, children }: He
       {/* Avatar — right side, bottom-aligned, swaps per mode */}
       <div className="absolute right-0 bottom-0 top-0 w-28 sm:w-44 md:w-56 flex items-end justify-end pointer-events-none select-none opacity-40 sm:opacity-100">
         <Image
-          src={isOptimized ? "/me-blue-bg.png" : isDark ? "/me-dark-bg.png" : "/me-white-bg.png"}
+          src={isOptimized ? "/me-blue-waving-bg.png" : isDark ? "/me-dark-waving-bg.png" : "/me-white-waving-bg.png"}
           alt="Chester Descallar"
           fill
           className="object-contain object-bottom"
